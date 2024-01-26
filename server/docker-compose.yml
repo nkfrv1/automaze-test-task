@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: db
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+      - POSTGRES_DB=$DB_NAME
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # healthcheck:
+    #   test: ["CMD", "pg_isready", "-d", "$DB_NAME", "-U", "$DB_USER"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 3
+    restart: always
+  main:
+    container_name: api
+    build:
+      context: .
+    ports:
+      - "5000:$PORT"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/usr/src/todo-app-backend/src
+    depends_on:
+      - postgres
+      #   condition: service_healthy
+    restart: unless-stopped
+  frontend:
+    container_name: client
+    build:
+      context: ../client
+    ports:
+      - "3000:3000"
+
+volumes:
+  db-data:
